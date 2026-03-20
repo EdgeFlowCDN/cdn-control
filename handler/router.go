@@ -24,6 +24,7 @@ func SetupRouter(db *pgxpool.Pool, expireHours int) *gin.Engine {
 	userH := NewUserHandler(db)
 	auditH := NewAuditHandler(db)
 	verifyH := NewVerifyHandler(db)
+	totpH := NewTOTPHandler(db)
 
 	// Service info and health
 	r.GET("/", func(c *gin.Context) {
@@ -96,6 +97,12 @@ func SetupRouter(db *pgxpool.Pool, expireHours int) *gin.Engine {
 		// Users - current user
 		api.GET("/users/me", userH.Me)
 		api.PUT("/users/me/password", userH.ChangePassword)
+
+		// 2FA / TOTP
+		api.POST("/users/me/2fa/setup", totpH.Setup)
+		api.POST("/users/me/2fa/verify", totpH.Verify)
+		api.POST("/users/me/2fa/disable", totpH.Disable)
+		api.GET("/users/me/2fa/status", totpH.Status)
 
 		// Users - admin only
 		admin := api.Group("")

@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/pquerna/otp/totp"
 
 	"github.com/EdgeFlowCDN/cdn-control/middleware"
 	"github.com/EdgeFlowCDN/cdn-control/model"
@@ -28,10 +29,12 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	var user model.User
+	var totpSecret string
+	var totpEnabled bool
 	err := h.db.QueryRow(context.Background(),
-		"SELECT id, username, password, role FROM users WHERE username = $1",
+		"SELECT id, username, password, role, totp_secret, totp_enabled FROM users WHERE username = $1",
 		req.Username,
-	).Scan(&user.ID, &user.Username, &user.Password, &user.Role)
+	).Scan(&user.ID, &user.Username, &user.Password, &user.Role, &totpSecret, &totpEnabled)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
 		return
@@ -40,6 +43,17 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	if !middleware.CheckPassword(req.Password, user.Password) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
 		return
+	}
+
+	if totpEnabled {
+		if req.TOTPCode == "" {
+			c.JSON(http.StatusOK, model.LoginResp{Requires2FA: true})
+			return
+		}
+		if !totp.Validate(req.TOTPCode, totpSecret) {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid 2FA code"})
+			return
+		}
 	}
 
 	token, err := middleware.GenerateToken(user.ID, user.Username, user.Role, h.expireHours)

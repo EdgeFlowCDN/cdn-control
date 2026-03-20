@@ -128,8 +128,29 @@ type UploadCertReq struct {
 type LoginReq struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required"`
+	TOTPCode string `json:"totp_code"`
 }
 
 type LoginResp struct {
-	Token string `json:"token"`
+	Token       string `json:"token,omitempty"`
+	Requires2FA bool   `json:"requires_2fa,omitempty"`
+}
+
+type Setup2FAResp struct {
+	Secret      string   `json:"secret"`
+	URL         string   `json:"url"`
+	BackupCodes []string `json:"backup_codes"`
+}
+
+type Verify2FAReq struct {
+	Code string `json:"code" binding:"required"`
+}
+
+type Disable2FAReq struct {
+	Code     string `json:"code" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+type TwoFAStatusResp struct {
+	Enabled bool `json:"enabled"`
 }
