@@ -1,5 +1,6 @@
 server:
   listen: ":8090"
+  grpc_listen: ":9091"
 
 database:
   host: "postgres"
