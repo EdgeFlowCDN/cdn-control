@@ -1,10 +1,15 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/EdgeFlowCDN/cdn-control/config"
 	"github.com/EdgeFlowCDN/cdn-control/db"
@@ -28,7 +33,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to connect to database: %v", err)
 	}
-	defer pool.Close()
 
 	// Run migrations
 	if err := db.Migrate(pool); err != nil {
@@ -57,8 +61,37 @@ func main() {
 	// Setup router
 	router := handler.SetupRouter(pool, cfg.JWT.ExpireHour)
 
-	log.Printf("EdgeFlow Control Plane starting on %s", cfg.Server.Listen)
-	if err := router.Run(cfg.Server.Listen); err != nil {
-		log.Fatalf("server failed: %v", err)
+	// Create HTTP server
+	srv := &http.Server{
+		Addr:    cfg.Server.Listen,
+		Handler: router,
 	}
+
+	// Start server in a goroutine
+	go func() {
+		log.Printf("EdgeFlow Control Plane starting on %s", cfg.Server.Listen)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("server failed: %v", err)
+		}
+	}()
+
+	// Wait for interrupt signal
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	<-sigCh
+	log.Println("received shutdown signal, shutting down gracefully...")
+
+	// Graceful shutdown with 15s timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Printf("HTTP server forced to shutdown: %v", err)
+	} else {
+		log.Println("HTTP server stopped gracefully")
+	}
+
+	// Close DB pool after shutdown
+	pool.Close()
+	log.Println("database connection closed")
 }
