@@ -16,7 +16,8 @@ type Config struct {
 }
 
 type ServerConfig struct {
-	Listen string `yaml:"listen"`
+	Listen     string `yaml:"listen"`
+	GRPCListen string `yaml:"grpc_listen"`
 }
 
 type DatabaseConfig struct {

@@ -8,6 +8,7 @@ import (
 
 	"github.com/EdgeFlowCDN/cdn-control/config"
 	"github.com/EdgeFlowCDN/cdn-control/db"
+	cdngrpc "github.com/EdgeFlowCDN/cdn-control/grpc"
 	"github.com/EdgeFlowCDN/cdn-control/handler"
 	"github.com/EdgeFlowCDN/cdn-control/middleware"
 )
@@ -41,6 +42,16 @@ func main() {
 	authH := handler.NewAuthHandler(pool, cfg.JWT.ExpireHour)
 	if err := authH.InitAdmin(); err != nil {
 		log.Printf("warning: failed to init admin user: %v", err)
+	}
+
+	// Start gRPC server
+	if cfg.Server.GRPCListen != "" {
+		grpcServer := cdngrpc.NewServer(pool, cfg.Server.GRPCListen)
+		go func() {
+			if err := grpcServer.Start(); err != nil {
+				log.Fatalf("gRPC server failed: %v", err)
+			}
+		}()
 	}
 
 	// Setup router
