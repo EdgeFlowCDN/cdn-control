@@ -2,6 +2,24 @@
 
 EdgeFlow CDN control plane — configuration management and API service.
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Console[Web Console] -->|REST API :8090| Control
+    API[Third-party] -->|REST API| Control
+
+    subgraph Control[Control Plane]
+        Gin[Gin Router + JWT]
+        Handlers[Domain / Origin / Cert / Purge / Node]
+    end
+
+    Control -->|gRPC :9091| Edge1[Edge Node 1]
+    Control -->|gRPC :9091| Edge2[Edge Node 2]
+    Control --> PG[(PostgreSQL)]
+    Control --> Redis[(Redis)]
+```
+
 ## Features
 
 - REST API (Gin) for domain, origin, cache rule, certificate, and node management
