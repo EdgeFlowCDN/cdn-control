@@ -101,4 +101,25 @@ CREATE TABLE IF NOT EXISTS users (
     role        VARCHAR(20) DEFAULT 'user',
     created_at  TIMESTAMP DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS webhooks (
+    id          BIGSERIAL PRIMARY KEY,
+    user_id     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    url         VARCHAR(500) NOT NULL,
+    events      TEXT[] NOT NULL DEFAULT '{}',
+    active      BOOLEAN DEFAULT TRUE,
+    created_at  TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id          BIGSERIAL PRIMARY KEY,
+    user_id     BIGINT NOT NULL DEFAULT 0,
+    username    VARCHAR(100) NOT NULL DEFAULT '',
+    action      VARCHAR(10) NOT NULL,
+    resource    VARCHAR(255) NOT NULL DEFAULT '',
+    resource_id VARCHAR(100) NOT NULL DEFAULT '',
+    details     JSONB,
+    ip          VARCHAR(45) NOT NULL DEFAULT '',
+    created_at  TIMESTAMP DEFAULT NOW()
+);
 `
