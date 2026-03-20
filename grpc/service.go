@@ -82,7 +82,7 @@ func (s *Server) Start() error {
 
 // GetFullConfig returns the complete domain configuration.
 func (s *Server) GetFullConfig(ctx context.Context, req *NodeInfo) (*FullConfigResponse, error) {
-	configs, err := s.loadDomainConfigs()
+	configs, err := s.LoadDomainConfigs()
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +178,7 @@ func (s *Server) BroadcastPurge(cmd *PurgeCommand) {
 	}
 }
 
-func (s *Server) loadDomainConfigs() ([]DomainConfig, error) {
+func (s *Server) LoadDomainConfigs() ([]DomainConfig, error) {
 	rows, err := s.db.Query(context.Background(),
 		`SELECT d.domain, o.addr, o.weight, o.priority
 		 FROM domains d JOIN origins o ON d.id = o.domain_id

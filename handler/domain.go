@@ -43,6 +43,7 @@ func (h *DomainHandler) Create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, domain)
+	notifyConfigChange()
 }
 
 func (h *DomainHandler) List(c *gin.Context) {
@@ -118,6 +119,7 @@ func (h *DomainHandler) Update(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, d)
+	notifyConfigChange()
 }
 
 func (h *DomainHandler) Delete(c *gin.Context) {
@@ -138,4 +140,5 @@ func (h *DomainHandler) Delete(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "deleted"})
+	notifyConfigChange()
 }

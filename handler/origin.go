@@ -55,6 +55,7 @@ func (h *OriginHandler) Create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, o)
+	notifyConfigChange()
 }
 
 func (h *OriginHandler) List(c *gin.Context) {
@@ -121,6 +122,7 @@ func (h *OriginHandler) Update(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, o)
+	notifyConfigChange()
 }
 
 func (h *OriginHandler) Delete(c *gin.Context) {
@@ -141,4 +143,5 @@ func (h *OriginHandler) Delete(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "deleted"})
+	notifyConfigChange()
 }

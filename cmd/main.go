@@ -56,6 +56,19 @@ func main() {
 				log.Fatalf("gRPC server failed: %v", err)
 			}
 		}()
+		// Wire config change notifications to gRPC broadcast
+		handler.SetConfigChangeNotifier(func() {
+			configs, err := grpcServer.LoadDomainConfigs()
+			if err != nil {
+				log.Printf("failed to load configs for broadcast: %v", err)
+				return
+			}
+			grpcServer.BroadcastUpdate(&cdngrpc.ConfigUpdate{
+				Action:  "full",
+				Domains: configs,
+			})
+			log.Printf("broadcasted config update to edge nodes (%d domains)", len(configs))
+		})
 	}
 
 	// Setup router
