@@ -25,6 +25,19 @@ func SetupRouter(db *pgxpool.Pool, expireHours int) *gin.Engine {
 	auditH := NewAuditHandler(db)
 	verifyH := NewVerifyHandler(db)
 
+	// Service info and health
+	r.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"service": "EdgeFlow Control Plane",
+			"version": "1.0.0",
+			"docs":    "/swagger/",
+			"api":     "/api/v1",
+		})
+	})
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok"})
+	})
+
 	// Public routes
 	r.POST("/api/v1/auth/login", authH.Login)
 
